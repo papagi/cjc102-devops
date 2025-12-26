@@ -13,7 +13,7 @@ COPY uploads.ini /usr/local/etc/php/conf.d/uploads.ini
 # 複製程式碼 (排除 uploads，因為它在庫外)
 # 注意：這裡會複製 wp-content/themes 和 plugins
 WORKDIR /var/www/html
-COPY src/ .
+COPY src/wp-content/ .
 
 # 修正權限 (確保 Web Server 能讀寫)
 RUN chown -R www-data:www-data /var/www/html

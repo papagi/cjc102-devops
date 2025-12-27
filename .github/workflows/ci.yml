@@ -1,12 +1,18 @@
-# 1. 這是 OIDC 必須新增的權限設定
+name: Deploy to Amazon ECR
+
+# 1. 修正：新增觸發條件
+on:
+  push:
+    branches: [ "main" ]
+
 permissions:
-  id-token: write   # 這是申請臨時金鑰必備的
-  contents: read    # 讀取程式碼內容
+  id-token: write   # OIDC 必備
+  contents: read    # 讀取程式碼
 
 env:
   AWS_REGION: ap-northeast-1
   ECR_REPOSITORY: cjc102-10-ecr-repo
-  # 2. 這是從你截圖中看到的真實角色 ARN
+  # 使用你提供的真實角色 ARN
   AWS_ROLE_ARN: arn:aws:iam::754515738597:role/GITHUB
 
 jobs:
@@ -16,7 +22,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # 3. 修改登入 AWS 的方式 (使用 OIDC)
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -27,16 +32,13 @@ jobs:
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
 
-      # 4. Build 與 Push 步驟
+      # 2. 修正：補上實際的 docker 指令
       - name: Build, tag, and push image
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          # 建議使用 latest 或是 github.sha 做為標籤
           IMAGE_TAG: latest
         run: |
-          # 編譯你在本地測試成功的 Nginx + PHP 8.3 Alpine Dockerfile
+          # 編譯 Docker 映像檔
           docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
           # 推送到 AWS ECR
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-
-
